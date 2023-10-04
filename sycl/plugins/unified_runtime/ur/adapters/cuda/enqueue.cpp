@@ -390,9 +390,16 @@ UR_APIEXPORT ur_result_t UR_APICALL urEnqueueKernelLaunch(
       UR_CHECK_ERROR(RetImplEvent->start());
     }
 
+    auto Device = hQueue->getContext()->getDevice();
+
+    if (LocalSize > static_cast<uint32_t>(Device->getMaxCapacityLocalMem())) {
+      setErrorMessage("Too much local memory allocated for device",
+                      UR_RESULT_ERROR_ADAPTER_SPECIFIC);
+      return UR_RESULT_ERROR_ADAPTER_SPECIFIC;
+    }
+
     if (hQueue->getContext()->getDevice()->maxLocalMemSizeChosen()) {
       // Set up local memory requirements for kernel.
-      auto Device = hQueue->getContext()->getDevice();
       if (Device->getMaxChosenLocalMem() < 0) {
         bool EnvVarHasURPrefix =
             (std::getenv("UR_CUDA_MAX_LOCAL_MEM_SIZE") != nullptr);
@@ -400,11 +407,6 @@ UR_APIEXPORT ur_result_t UR_APICALL urEnqueueKernelLaunch(
                                             "UR_CUDA_MAX_LOCAL_MEM_SIZE"
                                           : "Invalid value specified for "
                                             "SYCL_PI_CUDA_MAX_LOCAL_MEM_SIZE",
-                        UR_RESULT_ERROR_ADAPTER_SPECIFIC);
-        return UR_RESULT_ERROR_ADAPTER_SPECIFIC;
-      }
-      if (LocalSize > static_cast<uint32_t>(Device->getMaxCapacityLocalMem())) {
-        setErrorMessage("Too much local memory allocated for device",
                         UR_RESULT_ERROR_ADAPTER_SPECIFIC);
         return UR_RESULT_ERROR_ADAPTER_SPECIFIC;
       }
@@ -425,7 +427,12 @@ UR_APIEXPORT ur_result_t UR_APICALL urEnqueueKernelLaunch(
       UR_CHECK_ERROR(cuFuncSetAttribute(
           CuFunc, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES,
           Device->getMaxChosenLocalMem()));
-    }
+
+    } else {
+      UR_CHECK_ERROR(cuFuncSetAttribute(
+          CuFunc, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES,
+          LocalSize));
+      }
 
     UR_CHECK_ERROR(cuLaunchKernel(
         CuFunc, BlocksPerGrid[0], BlocksPerGrid[1], BlocksPerGrid[2],

@@ -26,6 +26,7 @@ private:
   int MaxBlockDimY{0};
   int MaxBlockDimZ{0};
   int MaxRegsPerBlock{0};
+  int MaxDefaultLocalMem{0};
   int MaxCapacityLocalMem{0};
   int MaxChosenLocalMem{0};
   bool MaxLocalMemSizeChosen{false};
@@ -43,6 +44,12 @@ public:
     UR_CHECK_ERROR(cuDeviceGetAttribute(
         &MaxRegsPerBlock, CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK,
         cuDevice));
+    UR_CHECK_ERROR(cuDeviceGetAttribute(
+          &MaxDefaultLocalMem,
+          CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK, cuDevice));
+    UR_CHECK_ERROR(cuDeviceGetAttribute(
+          &MaxCapacityLocalMem,
+          CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN, cuDevice));
 
     // Set local mem max size if env var is present
     static const char *LocalMemSizePtrUR =
@@ -54,9 +61,6 @@ public:
                           : (LocalMemSizePtrPI ? LocalMemSizePtrPI : nullptr);
 
     if (LocalMemSizePtr) {
-      cuDeviceGetAttribute(
-          &MaxCapacityLocalMem,
-          CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN, cuDevice);
       MaxChosenLocalMem = std::atoi(LocalMemSizePtr);
       MaxLocalMemSizeChosen = true;
     }
@@ -108,6 +112,8 @@ public:
   size_t getMaxRegsPerBlock() const noexcept { return MaxRegsPerBlock; };
 
   size_t getMaxAllocSize() const noexcept { return MaxAllocSize; };
+
+  int getMaxDefaultLocalMem() const noexcept { return MaxDefaultLocalMem; };
 
   int getMaxCapacityLocalMem() const noexcept { return MaxCapacityLocalMem; };
 
