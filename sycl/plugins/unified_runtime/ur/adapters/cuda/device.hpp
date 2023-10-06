@@ -45,11 +45,11 @@ public:
         &MaxRegsPerBlock, CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK,
         cuDevice));
     UR_CHECK_ERROR(cuDeviceGetAttribute(
-          &MaxDefaultLocalMem,
-          CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK, cuDevice));
+        &MaxDefaultLocalMem, CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK,
+        cuDevice));
     UR_CHECK_ERROR(cuDeviceGetAttribute(
-          &MaxCapacityLocalMem,
-          CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN, cuDevice));
+        &MaxCapacityLocalMem,
+        CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN, cuDevice));
 
     // Set local mem max size if env var is present
     static const char *LocalMemSizePtrUR =

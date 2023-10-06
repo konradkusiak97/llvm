@@ -499,7 +499,8 @@ UR_APIEXPORT ur_result_t UR_APICALL urDeviceGetInfo(ur_device_handle_t hDevice,
       return ReturnValue(
           static_cast<uint64_t>(hDevice->getMaxChosenLocalMem()));
     } else {
-      return ReturnValue(static_cast<uint64_t>(hDevice->getMaxCapacityLocalMem()));
+      return ReturnValue(
+          static_cast<uint64_t>(hDevice->getMaxCapacityLocalMem()));
     }
   }
   case UR_DEVICE_INFO_ERROR_CORRECTION_SUPPORT: {
