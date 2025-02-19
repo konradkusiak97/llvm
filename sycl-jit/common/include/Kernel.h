@@ -60,6 +60,7 @@ enum class ParameterKind : uint32_t {
   SpecConstBuffer = 4,
   Stream = 5,
   WorkGroupMemory = 6,
+  DynamicWorkGroupMemory = 7,
   Invalid = 0xF,
 };
 
@@ -239,8 +240,8 @@ public:
   NDRange(int Dimensions, const Indices &GlobalSize,
           const Indices &LocalSize = {1, 1, 1},
           const Indices &Offset = {0, 0, 0})
-      : Dimensions{Dimensions},
-        GlobalSize{GlobalSize}, LocalSize{LocalSize}, Offset{Offset} {
+      : Dimensions{Dimensions}, GlobalSize{GlobalSize}, LocalSize{LocalSize},
+        Offset{Offset} {
 #ifndef NDEBUG
     const auto CheckDim = [Dimensions](const Indices &Range) {
       return std::all_of(Range.begin() + Dimensions, Range.end(),

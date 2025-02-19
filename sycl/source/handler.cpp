@@ -999,6 +999,16 @@ void handler::processArg(void *Ptr, const detail::kernel_param_kind_t &Kind,
     }
     break;
   }
+  case kernel_param_kind_t::kind_dynamic_work_group_memory: {
+
+    auto *DynBase = static_cast<
+        ext::oneapi::experimental::detail::dynamic_parameter_base *>(Ptr);
+
+    registerDynamicParameter(*DynBase, Index + IndexShift);
+
+    Ptr = static_cast<void *>(++DynBase);
+    [[fallthrough]];
+  }
   case kernel_param_kind_t::kind_work_group_memory: {
     addArg(kernel_param_kind_t::kind_std_layout, nullptr,
            static_cast<detail::work_group_memory_impl *>(Ptr)->buffer_size,
