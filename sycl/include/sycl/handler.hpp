@@ -152,8 +152,7 @@ class pipe;
 }
 
 namespace ext ::oneapi ::experimental {
-template <typename, typename>
-class work_group_memory;
+template <typename, typename> class work_group_memory;
 struct image_descriptor;
 } // namespace ext::oneapi::experimental
 
@@ -514,7 +513,8 @@ private:
 
   /// Saves the location of user's code passed in \p CodeLoc for future usage in
   /// finalize() method.
-  /// TODO: remove the first version of this func (the one without the IsTopCodeLoc arg)
+  /// TODO: remove the first version of this func (the one without the
+  /// IsTopCodeLoc arg)
   ///   at the next ABI breaking window since removing it breaks ABI on windows.
   void saveCodeLoc(detail::code_location CodeLoc);
   void saveCodeLoc(detail::code_location CodeLoc, bool IsTopCodeLoc);
@@ -724,8 +724,9 @@ private:
         detail::KernelLambdaHasKernelHandlerArgT<KernelType,
                                                  LambdaArgType>::value;
 
-    MHostKernel = std::make_unique<
-        detail::HostKernel<KernelType, LambdaArgType, Dims>>(KernelFunc);
+    MHostKernel =
+        std::make_unique<detail::HostKernel<KernelType, LambdaArgType, Dims>>(
+            KernelFunc);
 
     constexpr bool KernelHasName =
         detail::getKernelName<KernelName>() != nullptr &&
@@ -3721,7 +3722,8 @@ private:
             "A local accessor must not be used in a SYCL kernel function "
             "that is invoked via single_task or via the simple form of "
             "parallel_for that takes a range parameter.");
-      if (Kind == detail::kernel_param_kind_t::kind_work_group_memory)
+      if (Kind == detail::kernel_param_kind_t::kind_work_group_memory ||
+          Kind == detail::kernel_param_kind_t::kind_dynamic_work_group_memory)
         throw sycl::exception(
             make_error_code(errc::kernel_argument),
             "A work group memory object must not be used in a SYCL kernel "

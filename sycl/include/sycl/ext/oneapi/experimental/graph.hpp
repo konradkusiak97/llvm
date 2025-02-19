@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "sycl/ext/oneapi/experimental/graph.hpp"
+#include <cstddef>
 #include <sycl/accessor.hpp>               // for detail::AccessorBaseHost
 #include <sycl/context.hpp>                // for context
 #include <sycl/detail/export.hpp>          // for __SYCL_EXPORT
@@ -17,8 +19,9 @@
 #ifdef __INTEL_PREVIEW_BREAKING_CHANGES
 #include <sycl/detail/string_view.hpp>
 #endif
-#include <sycl/device.hpp>                     // for device
+#include <sycl/device.hpp> // for device
 #include <sycl/ext/oneapi/experimental/detail/properties/graph_properties.hpp> // for graph properties classes
+#include <sycl/ext/oneapi/experimental/work_group_memory.hpp> // for dynamic_work_group_memory
 #include <sycl/nd_range.hpp>                   // for range, nd_range
 #include <sycl/properties/property_traits.hpp> // for is_property, is_property_of
 #include <sycl/property_list.hpp>              // for property_list
@@ -447,6 +450,10 @@ protected:
 namespace detail {
 class __SYCL_EXPORT dynamic_parameter_base {
 public:
+  dynamic_parameter_base() = default;
+  dynamic_parameter_base(
+      sycl::ext::oneapi::experimental::command_graph<graph_state::modifiable>
+          Graph);
   dynamic_parameter_base(
       sycl::ext::oneapi::experimental::command_graph<graph_state::modifiable>
           Graph,
@@ -461,13 +468,71 @@ protected:
   void updateValue(const raw_kernel_arg *NewRawValue, size_t Size);
 
   void updateAccessor(const sycl::detail::AccessorBaseHost *Acc);
+
+  void updateWorkGroupMem(size_t BufferSize);
+
   std::shared_ptr<dynamic_parameter_impl> impl;
 
   template <class Obj>
   friend const decltype(Obj::impl) &
   sycl::detail::getSyclObjImpl(const Obj &SyclObject);
 };
+
 } // namespace detail
+
+template <typename T> struct is_unbounded_array : std::false_type {};
+
+template <typename T> struct is_unbounded_array<T[]> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_unbounded_array_v = is_unbounded_array<T>::value;
+
+template <typename DataT,
+          typename = std::enable_if_t<is_unbounded_array_v<DataT>>>
+
+class __SYCL_SPECIAL_CLASS
+__SYCL_TYPE(dynamic_work_group_memory) dynamic_work_group_memory
+#ifdef __SYCL_DEVICE_ONLY__
+    : detail::dynamic_parameter_base
+#else
+    : public detail::dynamic_parameter_base
+#endif
+{
+public:
+  dynamic_work_group_memory() = default;
+  /// Constructs a new dynamic_work_group_memory object.
+  /// @param Graph The graph associated with this object.
+  /// @param Num Number of elements in the unbounded array DataT.
+  dynamic_work_group_memory(
+      experimental::command_graph<graph_state::modifiable> Graph, size_t Num) {
+    auto &WorkGroupMemImpl =
+        static_cast<detail::work_group_memory_impl &>(WorkGroupMem);
+    WorkGroupMemImpl.buffer_size = Num * sizeof(std::remove_extent_t<DataT>);
+  }
+
+  /// Updates this dynamic_work_group_memory and all registered nodes with a new
+  /// number of elements.
+  /// @param Num The new number of elements in the unbounded array.
+  void update(size_t Num) {
+#ifndef __SYCL_DEVICE_ONLY__
+    detail::dynamic_parameter_base::updateWorkGroupMem(
+        Num * sizeof(std::remove_extent_t<DataT>));
+#endif
+  }
+
+  const work_group_memory<DataT> &get() const { return WorkGroupMem; }
+
+private:
+  work_group_memory<DataT> WorkGroupMem;
+#ifdef __SYCL_DEVICE_ONLY__
+  // [[maybe_unused]] char padding[sizeof(detail::dynamic_parameter_base)];
+  using value_type = std::remove_all_extents_t<DataT>;
+  using decoratedPtr = typename sycl::detail::DecoratedType<
+      value_type, access::address_space::local_space>::type *;
+
+  void __init(decoratedPtr Ptr) { this->WorkGroupMem.__init(Ptr); }
+#endif
+};
 
 template <typename ValueT>
 class dynamic_parameter : public detail::dynamic_parameter_base {
