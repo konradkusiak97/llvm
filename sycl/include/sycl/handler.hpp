@@ -153,11 +153,14 @@ class pipe;
 
 namespace ext ::oneapi ::experimental {
 template <typename, typename> class work_group_memory;
+template <typename, typename> class dynamic_work_group_memory;
 struct image_descriptor;
 } // namespace ext::oneapi::experimental
 
 namespace ext::oneapi::experimental::detail {
 class graph_impl;
+class dynamic_work_group_memory_base;
+class dynamic_parameter_base;
 } // namespace ext::oneapi::experimental::detail
 namespace detail {
 

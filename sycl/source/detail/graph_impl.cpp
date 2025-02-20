@@ -1995,8 +1995,7 @@ void dynamic_parameter_impl::updateCGWorkGroupMem(
     if (Arg.MIndex != ArgIndex) {
       continue;
     }
-    assert(Arg.MType ==
-           sycl::detail::kernel_param_kind_t::kind_dynamic_work_group_memory);
+    assert(Arg.MType == sycl::detail::kernel_param_kind_t::kind_std_layout);
     Arg.MSize = BufferSize;
     break;
   }
