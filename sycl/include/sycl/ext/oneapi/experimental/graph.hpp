@@ -488,7 +488,6 @@ protected:
 namespace detail {
 class __SYCL_EXPORT dynamic_parameter_base {
 public:
-  dynamic_parameter_base() = default;
   dynamic_parameter_base(
       sycl::ext::oneapi::experimental::command_graph<graph_state::modifiable>
           Graph);
@@ -526,37 +525,55 @@ protected:
   sycl::detail::getSyclObjImpl(const Obj &SyclObject);
 };
 
-} // namespace detail
-
-template <typename T> struct is_unbounded_array : std::false_type {};
-
-template <typename T> struct is_unbounded_array<T[]> : std::true_type {};
-
-template <typename T>
-inline constexpr bool is_unbounded_array_v = is_unbounded_array<T>::value;
-
-template <typename DataT,
-          typename = std::enable_if_t<is_unbounded_array_v<DataT>>>
-
-class __SYCL_SPECIAL_CLASS
-__SYCL_TYPE(dynamic_work_group_memory) dynamic_work_group_memory
-#ifdef __SYCL_DEVICE_ONLY__
-    : detail::dynamic_parameter_base
-#else
-    : public detail::dynamic_parameter_base
+class dynamic_work_group_memory_base
+#ifndef __SYCL_DEVICE_ONLY__
+    : public dynamic_parameter_base
 #endif
 {
 public:
-  dynamic_work_group_memory() = default;
+  dynamic_work_group_memory_base() = default;
+  dynamic_work_group_memory_base(
+      experimental::command_graph<graph_state::modifiable> Graph, size_t Size)
+      :
+#ifndef __SYCL_DEVICE_ONLY__
+        dynamic_parameter_base(Graph),
+#endif
+        BufferSize(Size) {
+  }
+
+private:
+#ifdef __SYCL_DEVICE_ONLY__
+  [[maybe_unused]] char padding[sizeof(dynamic_parameter_base)];
+#endif
+  size_t BufferSize{};
+  friend class sycl::handler;
+};
+} // namespace detail
+
+template <typename DataT,
+          typename = std::enable_if_t<detail::is_unbounded_array_v<DataT>>>
+class __SYCL_SPECIAL_CLASS
+__SYCL_TYPE(dynamic_work_group_memory) dynamic_work_group_memory
+    : public detail::dynamic_work_group_memory_base {
+private:
+  work_group_memory<DataT> WorkGroupMem;
+
+  using value_type = std::remove_all_extents_t<DataT>;
+  using decoratedPtr = typename sycl::detail::DecoratedType<
+      value_type, access::address_space::local_space>::type *;
+
+#ifdef __SYCL_DEVICE_ONLY__
+  void __init(decoratedPtr Ptr) { this->WorkGroupMem.__init(Ptr); }
+#endif
+
+public:
   /// Constructs a new dynamic_work_group_memory object.
   /// @param Graph The graph associated with this object.
   /// @param Num Number of elements in the unbounded array DataT.
   dynamic_work_group_memory(
-      experimental::command_graph<graph_state::modifiable> Graph, size_t Num) {
-    auto &WorkGroupMemImpl =
-        static_cast<detail::work_group_memory_impl &>(WorkGroupMem);
-    WorkGroupMemImpl.buffer_size = Num * sizeof(std::remove_extent_t<DataT>);
-  }
+      experimental::command_graph<graph_state::modifiable> Graph, size_t Num)
+      : detail::dynamic_work_group_memory_base(
+            Graph, Num * sizeof(std::remove_extent_t<DataT>)) {}
 
   /// Updates this dynamic_work_group_memory and all registered nodes with a new
   /// number of elements.
@@ -567,19 +584,15 @@ public:
         Num * sizeof(std::remove_extent_t<DataT>));
 #endif
   }
+  work_group_memory<DataT> get() const { return WorkGroupMem; }
 
-  const work_group_memory<DataT> &get() const { return WorkGroupMem; }
-
-private:
-  work_group_memory<DataT> WorkGroupMem;
-#ifdef __SYCL_DEVICE_ONLY__
-  // [[maybe_unused]] char padding[sizeof(detail::dynamic_parameter_base)];
-  using value_type = std::remove_all_extents_t<DataT>;
-  using decoratedPtr = typename sycl::detail::DecoratedType<
-      value_type, access::address_space::local_space>::type *;
-
-  void __init(decoratedPtr Ptr) { this->WorkGroupMem.__init(Ptr); }
-#endif
+  // Frontend requires special types to have a default constructor in order to
+  // have a uniform way of initializing an object of special type to then call
+  // the __init method on it. This is purely an implementation detail and not
+  // part of the spec.
+  // TODO: Revisit this once https://github.com/intel/llvm/issues/16061 is
+  // closed.
+  dynamic_work_group_memory() = default;
 };
 
 template <typename ValueT>

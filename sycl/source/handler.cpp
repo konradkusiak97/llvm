@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "sycl/detail/helpers.hpp"
+#include "sycl/ext/oneapi/experimental/graph.hpp"
 #include "ur_api.h"
 #include <algorithm>
 
@@ -1004,10 +1005,15 @@ void handler::processArg(void *Ptr, const detail::kernel_param_kind_t &Kind,
     auto *DynBase = static_cast<
         ext::oneapi::experimental::detail::dynamic_parameter_base *>(Ptr);
 
+    auto *DynWorkGroupBase = static_cast<
+        ext::oneapi::experimental::detail::dynamic_work_group_memory_base *>(
+        Ptr);
+
     registerDynamicParameter(*DynBase, Index + IndexShift);
 
-    Ptr = static_cast<void *>(++DynBase);
-    [[fallthrough]];
+    addArg(kernel_param_kind_t::kind_std_layout, nullptr,
+           DynWorkGroupBase->BufferSize, Index + IndexShift);
+    break;
   }
   case kernel_param_kind_t::kind_work_group_memory: {
     addArg(kernel_param_kind_t::kind_std_layout, nullptr,

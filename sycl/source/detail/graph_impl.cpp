@@ -2033,7 +2033,7 @@ void dynamic_parameter_impl::updateWorkGroupMem(size_t BufferSize) {
   for (auto &DynCGInfo : MDynCGs) {
     auto DynCG = DynCGInfo.DynCG.lock();
     if (DynCG) {
-      auto &CG = DynCG->MKernels[DynCGInfo.CGIndex];
+      auto &CG = DynCG->MCommandGroups[DynCGInfo.CGIndex];
       dynamic_parameter_impl::updateCGWorkGroupMem(CG, DynCGInfo.ArgIndex,
                                                    BufferSize);
     }
@@ -2048,8 +2048,7 @@ void dynamic_parameter_impl::updateCGWorkGroupMem(
     if (Arg.MIndex != ArgIndex) {
       continue;
     }
-    assert(Arg.MType ==
-           sycl::detail::kernel_param_kind_t::kind_dynamic_work_group_memory);
+    assert(Arg.MType == sycl::detail::kernel_param_kind_t::kind_std_layout);
     Arg.MSize = BufferSize;
     break;
   }
