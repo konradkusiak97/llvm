@@ -11,6 +11,7 @@
 #include "clang/Sema/SemaSYCL.h"
 #include "TreeTransform.h"
 #include "clang/AST/AST.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/QualTypeNames.h"
 #include "clang/AST/RecordLayout.h"
@@ -2081,7 +2082,9 @@ public:
   }
 
   bool handleSyclSpecialType(ParmVarDecl *PD, QualType ParamTy) final {
-    if (!SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory)) {
+    if (!SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory) ||
+        !SemaSYCL::isSyclType(ParamTy,
+                              SYCLTypeAttr::dynamic_work_group_memory)) {
       Diag.Report(PD->getLocation(), diag::err_bad_kernel_param_type)
           << ParamTy;
       IsInvalid = true;
@@ -2236,7 +2239,8 @@ public:
   }
 
   bool handleSyclSpecialType(ParmVarDecl *PD, QualType ParamTy) final {
-    if (!SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory))
+    if (!SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory) ||
+        !SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::dynamic_work_group_memory))
       unsupportedFreeFunctionParamType(); // TODO
     return true;
   }
@@ -3022,7 +3026,9 @@ public:
   }
 
   bool handleSyclSpecialType(ParmVarDecl *PD, QualType ParamTy) final {
-    if (SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory)) {
+    if (SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory) ||
+        SemaSYCL::isSyclType(ParamTy,
+                             SYCLTypeAttr::dynamic_work_group_memory)) {
       const auto *RecordDecl = ParamTy->getAsCXXRecordDecl();
       assert(RecordDecl && "The type must be a RecordDecl");
       CXXMethodDecl *InitMethod = getMethodByName(RecordDecl, InitMethodName);
@@ -4534,7 +4540,9 @@ public:
   // TODO: Revisit this approach once https://github.com/intel/llvm/issues/16061
   // is closed.
   bool handleSyclSpecialType(ParmVarDecl *PD, QualType ParamTy) final {
-    if (SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory)) {
+    if (SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory) ||
+        SemaSYCL::isSyclType(ParamTy,
+                             SYCLTypeAttr::dynamic_work_group_memory)) {
       const auto *RecordDecl = ParamTy->getAsCXXRecordDecl();
       AccessSpecifier DefaultConstructorAccess;
       auto DefaultConstructor =
@@ -4813,6 +4821,10 @@ public:
     } else if (SemaSYCL::isSyclType(FieldTy, SYCLTypeAttr::work_group_memory)) {
       addParam(FieldTy, SYCLIntegrationHeader::kind_work_group_memory,
                offsetOf(RD, BC.getType()->getAsCXXRecordDecl()));
+    } else if (SemaSYCL::isSyclType(FieldTy,
+                                    SYCLTypeAttr::dynamic_work_group_memory)) {
+      addParam(FieldTy, SYCLIntegrationHeader::kind_dynamic_work_group_memory,
+               offsetOf(RD, BC.getType()->getAsCXXRecordDecl()));
     }
     return true;
   }
@@ -4864,6 +4876,10 @@ public:
   bool handleSyclSpecialType(ParmVarDecl *PD, QualType ParamTy) final {
     if (SemaSYCL::isSyclType(ParamTy, SYCLTypeAttr::work_group_memory))
       addParam(PD, ParamTy, SYCLIntegrationHeader::kind_work_group_memory);
+    else if (SemaSYCL::isSyclType(ParamTy,
+                                  SYCLTypeAttr::dynamic_work_group_memory))
+      addParam(PD, ParamTy,
+               SYCLIntegrationHeader::kind_dynamic_work_group_memory);
     else
       unsupportedFreeFunctionParamType(); // TODO
     return true;

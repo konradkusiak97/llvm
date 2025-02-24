@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "sycl/ext/oneapi/experimental/graph.hpp"
 #include "sycl/handler.hpp"
 #include <detail/cg.hpp>
 #include <detail/kernel_bundle_impl.hpp>
@@ -36,7 +37,7 @@ public:
                bool EventNeeded)
       : MSubmissionPrimaryQueue(std::move(SubmissionPrimaryQueue)),
         MSubmissionSecondaryQueue(std::move(SubmissionSecondaryQueue)),
-        MEventNeeded(EventNeeded) {};
+        MEventNeeded(EventNeeded){};
 
   handler_impl(
       std::shared_ptr<ext::oneapi::experimental::detail::graph_impl> Graph)
@@ -198,6 +199,11 @@ public:
   /// List of work group memory objects associated with this handler
   std::vector<std::shared_ptr<detail::work_group_memory_impl>>
       MWorkGroupMemoryObjects;
+
+  /// List of dynamic work group memory objects associated with this handler
+  std::vector<std::shared_ptr<
+      ext::oneapi::experimental::detail::dynamic_work_group_memory_base>>
+      MDynWorkGroupMemoryParams;
 
   /// Potential event mode for the result event of the command.
   ext::oneapi::experimental::event_mode_enum MEventMode =
