@@ -188,7 +188,7 @@ fill_image_desc(const ext::oneapi::experimental::image_descriptor &ImgDesc) {
 }
 
 static void
-fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
+fill_copy_args(std::shared_ptr<detail::handler_impl> &impl,
                const ext::oneapi::experimental::image_descriptor &SrcImgDesc,
                const ext::oneapi::experimental::image_descriptor &DestImgDesc,
                ur_exp_image_copy_flags_t ImageCopyFlags, size_t SrcPitch,
@@ -255,7 +255,7 @@ fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
 }
 
 static void
-fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
+fill_copy_args(std::shared_ptr<detail::handler_impl> &impl,
                const ext::oneapi::experimental::image_descriptor &Desc,
                ur_exp_image_copy_flags_t ImageCopyFlags,
                sycl::range<3> SrcOffset = {0, 0, 0},
@@ -270,7 +270,7 @@ fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
 }
 
 static void
-fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
+fill_copy_args(std::shared_ptr<detail::handler_impl> &impl,
                const ext::oneapi::experimental::image_descriptor &Desc,
                ur_exp_image_copy_flags_t ImageCopyFlags, size_t SrcPitch,
                size_t DestPitch, sycl::range<3> SrcOffset = {0, 0, 0},
@@ -284,7 +284,7 @@ fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
 }
 
 static void
-fill_copy_args(std::shared_ptr<detail::handler_impl> impl,
+fill_copy_args(std::shared_ptr<detail::handler_impl> &impl,
                const ext::oneapi::experimental::image_descriptor &SrcImgDesc,
                const ext::oneapi::experimental::image_descriptor &DestImgDesc,
                ur_exp_image_copy_flags_t ImageCopyFlags,

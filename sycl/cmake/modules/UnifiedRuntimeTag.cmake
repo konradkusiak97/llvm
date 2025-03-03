@@ -1,7 +1,7 @@
-# commit 08d36b76a5b1c4f080e3301507a39525ab5ab365
-# Merge: 4c504dbc e6b61c67
+# commit d03f19a88e42cb98be9604ff24b61190d1e48727
+# Merge: 3ce6fcc9 84454b0e
 # Author: Kenneth Benzie (Benie) <k.benzie@codeplay.com>
-# Date:   Tue Feb 4 13:14:19 2025 +0000
-#     Merge pull request #2614 from kurapov-peter/spills
-#     Add UR_KERNEL_INFO_SPILL_MEM_SIZE kernel info prop
-set(UNIFIED_RUNTIME_TAG 08d36b76a5b1c4f080e3301507a39525ab5ab365)
+# Date:   Thu Feb 13 11:43:34 2025 +0000
+#     Merge pull request #2680 from ldorau/Set_UMF_CUDA_INCLUDE_DIR_to_not_fetch_cudart_from_gitlab
+#     Do not fetch cudart from gitlab for UMF
+set(UNIFIED_RUNTIME_TAG d03f19a88e42cb98be9604ff24b61190d1e48727)
